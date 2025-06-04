@@ -135,3 +135,7 @@ const potenciasHid = Q.map((q, i) => potenciaHidraulica(q, alturas[i]));
 const potenciasBomba = potenciasHid.map((p, i) => potenciaBomba(p, eficiencias[i]));
 const potenciasCV = potenciasBomba.map(p => potenciaCv(p));
 */
+
+export function generateNumberRange(start: number, end: number) {
+  return [...Array(end - start + 1).keys()].map((n) => n + start);
+}
