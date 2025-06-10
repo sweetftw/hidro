@@ -34,7 +34,7 @@ function App() {
 
   const [npsh, setNpsh] = useState(0.0);
   const [potenciaHidraulica, setPotenciaHidraulica] = useState(0.0);
-  const [potenciaCv, setPotenciaCv] = useState(0.0);
+  //const [potenciaCv, setPotenciaCv] = useState(0.0);
 
   const rangeVazao = functionService.generateNumberRange(0, vazao);
 
@@ -63,8 +63,9 @@ function App() {
     );
 
     const maxPH = Math.max(...calcPH);
-    setPotenciaHidraulica(maxPH.toFixed(2));
-    setPotenciaCv(functionService.potenciaCv(maxPH));
+    const maxFixed = maxPH.toFixed(2);
+    setPotenciaHidraulica(Number(maxFixed));
+    //setPotenciaCv(functionService.potenciaCv(maxPH));
 
     setNpsh(
       functionService.npshDisponivel(
