@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,7 +9,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { CartesianGrid, Line, LineChart } from "recharts";
+import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
 import "./App.css";
 import { Input } from "./components/ui/input";
@@ -20,6 +21,7 @@ function App() {
 
   //CONFIG BOMBA PARAMS
 
+  const [vazao, setVazao] = useState(0.0);
   const [alturaMaxima, setAlturaMaxima] = useState(0.0);
   const [coeficientePerda, setCoeficientePerda] = useState(0.0);
   const [eficienciaMax, setEficienciaMax] = useState(0.0);
@@ -30,40 +32,86 @@ function App() {
   const [pressaoAgua, setPressaoAgua] = useState(0.0);
   const [pressaoAtm, setPressaoAtm] = useState(0.0);
 
-  const rangeEfi = functionService.generateNumberRange(0, 30);
+  const [npsh, setNpsh] = useState(0.0);
+  const [potenciaHidraulica, setPotenciaHidraulica] = useState(0.0);
+  const [potenciaCv, setPotenciaCv] = useState(0.0);
 
-  const getEficiencia = () => {
-    return functionService.eficiencia(
-      rangeEfi,
+  const rangeVazao = functionService.generateNumberRange(0, vazao);
+
+  // CONFIG CHART
+  const [chartData, setChartData] = useState<any[]>([]);
+
+  const getLinesChart = () => {
+    let dataChart = [];
+
+    const calcAlt: number[] = functionService.alturaMano(
+      rangeVazao,
+      alturaMaxima,
+      coeficientePerda
+    );
+
+    const calcEfi: number[] = functionService.eficiencia(
+      rangeVazao,
       eficienciaMax,
       vazaoOtima,
       curvaEficiencia
     );
-  };
 
-  // CONFIG CHART
-  const chartData: unknown[] = [];
-  rangeEfi.forEach((n) => {
-    chartData.push({
-      step: `${n}`,
-      eficiencia: 186,
-    });
-  });
+    const calcPH: number[] = functionService.potenciaHidraulica(
+      rangeVazao,
+      calcAlt
+    );
+
+    const maxPH = Math.max(...calcPH);
+    setPotenciaHidraulica(maxPH.toFixed(2));
+    setPotenciaCv(functionService.potenciaCv(maxPH));
+
+    setNpsh(
+      functionService.npshDisponivel(
+        alturaSuccao,
+        perdaCargaSuccao,
+        pressaoAgua,
+        pressaoAtm
+      )
+    );
+
+    for (let i = 0; i < rangeVazao.length; i++) {
+      const tick = rangeVazao[i];
+      const tickEfi = calcEfi[i];
+      const tickVazao = calcPH[i];
+      const tickAltura = calcAlt[i];
+
+      dataChart.push({
+        key: tick,
+        eficiencia: tickEfi,
+        potencia_hidro: tickVazao,
+        altura_mano: tickAltura,
+      });
+    }
+
+    setChartData(dataChart);
+  };
 
   const chartConfig = {
     eficiencia: {
-      label: "Eficiencia",
+      label: "Eficiência (%) ",
       color: "#2563eb",
     },
-    mobile: {
-      label: "Mobile",
+    potencia_hidro: {
+      label: "Potência Hidráulica (kW) ",
       color: "#60a5fa",
+    },
+    altura_mano: {
+      label: "Altura manométrica (m) ",
+      color: "#4f772d",
     },
   } satisfies ChartConfig;
 
   return (
     <div className="w-full h-dvh flex flex-col justify-center items-center p-48">
-      <h1>Teste</h1>
+      <h1 className="self-start font-semibold text-2xl">
+        Simulador de Bomba Hidráulica
+      </h1>
       <div className="w-full flex justify-center items-center gap-6">
         <div className="w-full">
           <ChartContainer
@@ -71,20 +119,35 @@ function App() {
             className="min-h-[700px] w-full max-w-[1000px] border-2 border-gray-200 rounded-lg"
           >
             <LineChart accessibilityLayer data={chartData}>
-              <ChartTooltip content={<ChartTooltipContent />} />
+              <ChartTooltip content={<ChartTooltipContent labelKey="a" />} />
               <ChartLegend content={<ChartLegendContent />} />
               <CartesianGrid vertical={false} />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                type="number"
+                domain={[0, 100]}
+                allowDataOverflow
+              />
+              <XAxis dataKey="key" tickLine={false} axisLine={false} />
               <Line
-                dataKey="desktop"
+                dataKey="eficiencia"
                 type="monotone"
                 stroke="#ff0000"
                 strokeWidth={2}
                 dot={false}
               />
               <Line
-                dataKey="mobile"
+                dataKey="potencia_hidro"
                 type="monotone"
-                stroke="var(--color-mobile)"
+                stroke="#60a5fa"
+                strokeWidth={2}
+                dot={false}
+              />
+              <Line
+                dataKey="altura_mano"
+                type="monotone"
+                stroke="#4f772d"
                 strokeWidth={2}
                 dot={false}
               />
@@ -92,8 +155,17 @@ function App() {
           </ChartContainer>
         </div>
         <div className="w-full h-full flex flex-col justify-start items-center gap-4">
-          <h2>Parametros Bomba</h2>
-          <div className="grid w-full max-w-sm items-center gap-1">
+          {/* <h2>Parâmetros Bomba Hidráulica</h2> */}
+          <div className="grid w-full max-w-sm min-w-3xs items-center gap-1">
+            <Label htmlFor="vazao">Vazão (Q) [L/s]</Label>
+            <Input
+              id="vazao"
+              type="number"
+              placeholder="00.00"
+              onChange={(e) => setVazao(e.target.valueAsNumber)}
+            />
+          </div>
+          <div className="grid w-full max-w-sm min-w-3xs items-center gap-1">
             <Label htmlFor="alt_max">Altura máxima (H0) [m]</Label>
             <Input
               id="alt_max"
@@ -174,13 +246,38 @@ function App() {
               onChange={(e) => setPressaoAtm(e.target.valueAsNumber)}
             />
           </div>
-          <Button
-            className="w-full"
-            onClick={() => console.log(getEficiencia())}
-          >
+          <Button className="w-full max-w-sm" onClick={() => getLinesChart()}>
             Calcular
           </Button>
         </div>
+      </div>
+      <div className="flex flex-col self-start items-center gap-6 bg-emerald-200 mt-4 p-4 rounded-md">
+        <div className="flex self-start items-center gap-6">
+          <div className="flex flex-col justify-center items-start">
+            <h1>Potência Hidráulica</h1>
+            <span className="text-2xl font-bold">{potenciaHidraulica} kW</span>
+          </div>
+          <div className="flex flex-col justify-center items-start">
+            <h1>Potência da Bomba (kW)</h1>
+            <span className="text-2xl font-bold">49.44 kW</span>
+          </div>
+          <div className="flex flex-col justify-center items-start">
+            <h1>Potência da Bomba (CV)</h1>
+            <span className="text-2xl font-bold">67.21 CV</span>
+          </div>
+          <div className="flex flex-col justify-center items-start">
+            <span>
+              NPSH Disponível (NPSHa): <b>{npsh} m</b>
+            </span>
+            <span>
+              NPSH Requerido mínimo (NPSHr): <b>2.00 m</b>
+            </span>
+          </div>
+        </div>
+        {/* TODO: this shit */}
+        {/* <span className="self-start font-bold">
+          ✅ Bomba operando na região segura
+        </span> */}
       </div>
     </div>
   );

@@ -3,8 +3,17 @@
  *
  * H(Q) = H0 - k * Q²
  */
-export function alturaMano(Q: number, H0: number, k: number): number {
-  return H0 - k * Math.pow(Q, 2);
+export function alturaMano(Q: number[], H0: number, k: number): number[] {
+  const calcAlt = (q: number) => {
+    const square2 = Math.pow(q, 2);
+    return H0 - k * square2;
+  };
+
+  if (Array.isArray(Q)) {
+    return Q.map(calcAlt);
+  } else {
+    return [];
+  }
 }
 
 /**
@@ -21,16 +30,22 @@ export function eficiencia(
   etaMax: number,
   QOpt: number,
   largura: number = 0.5
-): number | number[] {
+): number[] {
   const calcEta = (q: number): number => {
     const eta = etaMax * Math.exp(-Math.pow((q - QOpt) / (QOpt * largura), 2));
     return Math.max(0.01, Math.min(eta, etaMax)); // evita valores menores que 1%
   };
 
-  if (Array.isArray(Q)) {
+  /* if (Array.isArray(Q)) {
     return Q.map(calcEta);
   } else {
     return calcEta(Q);
+  } */
+
+  if (Array.isArray(Q)) {
+    return Q.map(calcEta);
+  } else {
+    return [];
   }
 }
 
@@ -40,13 +55,27 @@ export function eficiencia(
  * P = ρ * g * Q * H
  */
 export function potenciaHidraulica(
-  QLps: number,
-  H: number,
-  rho: number = 1000,
+  QLps: number[],
+  H: number[],
+  rho: number = 997,
   g: number = 9.81
-): number {
-  const QM3s = QLps / 1000; // Converte L/s para m³/s
-  return rho * g * QM3s * H; // Em Watts
+): number[] {
+  /* const calcPH = (q: number): number => {
+    const QM3s = q / 1000; // Converte L/s para m³/s
+    return rho * g * QM3s * H; // Em Watts
+  };
+ */
+
+  if (Array.isArray(QLps)) {
+    return QLps.map((qL, i) => {
+      const q = qL / 1000; // Convertendo L/s para m³/s
+      const h = H[i];
+      const p = rho * g * q * h; // Potência em watts
+      return p / 1000; // Potência em kW
+    });
+  } else {
+    return [];
+  }
 }
 
 /**
@@ -137,5 +166,8 @@ const potenciasCV = potenciasBomba.map(p => potenciaCv(p));
 */
 
 export function generateNumberRange(start: number, end: number) {
+  if (start > end) {
+    return [...Array(start - end - 1).keys()].map((n) => start - n);
+  }
   return [...Array(end - start + 1).keys()].map((n) => n + start);
 }
