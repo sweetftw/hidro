@@ -112,7 +112,7 @@ function App() {
     <div className="w-full h-dvh flex flex-col justify-center items-center p-48">
       <h1 className="self-start font-semibold text-2xl flex justify-center items-center gap-4">
         Simulador de Bomba Hidráulica
-        <img src="../public/droplets.svg" alt="Logo" className="w-6 h-6" />
+        <img src="/droplets.svg" alt="Logo" className="w-6 h-6" />
       </h1>
       <div className="w-full flex justify-center items-center gap-6">
         <div className="w-full">
