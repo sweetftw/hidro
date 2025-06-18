@@ -21,4 +21,28 @@ export const pumpList: Map<string, Pump> = new Map([
       altura_max: 20,
     },
   ],
+  [
+    "Bomba Sulzer SMD Series",
+    {
+      npshr: 30,
+      npsha: 18.28,
+      potencia_cv: 335,
+      potencia_kwatts: 250,
+      rpm: 3600,
+      vazao_max_ls: 1390,
+      altura_max: 700,
+    },
+  ],
+  [
+    "Schneider BCS-32",
+    {
+      npshr: 2.0,
+      npsha: 18.28,
+      potencia_cv: 4,
+      potencia_kwatts: 2.9,
+      rpm: 3500,
+      vazao_max_ls: 21,
+      altura_max: 20,
+    },
+  ],
 ]);

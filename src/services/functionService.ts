@@ -6,7 +6,7 @@
 export function alturaMano(Q: number[], H0: number, k: number): number[] {
   const calcAlt = (q: number) => {
     const square2 = Math.pow(q, 2);
-    return H0 - k * square2;
+    return Math.max(H0 - k * square2, 0);
   };
 
   if (Array.isArray(Q)) {
@@ -33,7 +33,7 @@ export function eficiencia(
 ): number[] {
   const calcEta = (q: number): number => {
     const eta = etaMax * Math.exp(-Math.pow((q - QOpt) / (QOpt * largura), 2));
-    return Math.max(0.01, Math.min(eta, etaMax)); // evita valores menores que 1%
+    return Math.max(0, Math.min(eta, etaMax)); // evita valores menores que 1%
   };
 
   /* if (Array.isArray(Q)) {
@@ -71,7 +71,7 @@ export function potenciaHidraulica(
       const q = qL / 1000; // Convertendo L/s para m³/s
       const h = H[i];
       const p = rho * g * q * h; // Potência em watts
-      return p / 1000; // Potência em kW
+      return Math.max(p / 1000, 0); // Potência em kW
     });
   } else {
     return [];
@@ -178,6 +178,8 @@ export function generateNumberRange(
   end: number,
   step: number
 ): number[] {
+  if (end > 5) step = 0.5;
+  if (end > 150) step = 50;
   const range: number[] = [];
   for (let i = start; i <= end; i += step) {
     range.push(parseFloat(i.toFixed(2))); // Garantir precisão com 1 casa decimal
