@@ -21,7 +21,6 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "./components/ui/select";
@@ -33,18 +32,16 @@ function App() {
   const [pump, setPump] = useState<Pump>();
   const [vazaoMax, setVazaoMax] = useState(0.0);
   const [alturaMaxima, setAlturaMaxima] = useState(0.0);
-  const [coeficientePerda, setCoeficientePerda] = useState(0.0);
-  const [eficienciaMax, setEficienciaMax] = useState(0.0);
-  const [vazaoOtima, setVazaoOtima] = useState(0.0);
-  const [alturaSuccao, setAlturaSuccao] = useState(0.0);
-  const [perdaCargaSuccao, setPerdaCargaSuccao] = useState(0.0);
-  const [pressaoAgua, setPressaoAgua] = useState(0.0);
-
-  const [npsh, setNpsh] = useState(0.0);
+  const [coeficientePerda, setCoeficientePerda] = useState(5.6);
+  const [eficienciaMax, setEficienciaMax] = useState(90);
+  const [vazaoOtima, setVazaoOtima] = useState(0.7);
+  const [alturaSuccao, setAlturaSuccao] = useState(18);
+  const [perdaCargaSuccao, setPerdaCargaSuccao] = useState(0.003);
+  const [pressaoAgua, setPressaoAgua] = useState(-1.24);
   const [potenciaHidraulica, setPotenciaHidraulica] = useState(0.0);
   //const [potenciaCv, setPotenciaCv] = useState(0.0);
 
-  const rangeVazao = functionService.generateNumberRange(0, vazaoMax);
+  const rangeVazao = functionService.generateNumberRange(0, vazaoMax, 0.05);
 
   // CONFIG CHART
   const [chartData, setChartData] = useState<any[]>([]);
@@ -69,30 +66,33 @@ function App() {
       calcAlt
     );
 
+    const calcNpshr: number[] = functionService.npshRequerido(rangeVazao);
+
     const maxPH = Math.max(...calcPH);
     const maxFixed = maxPH.toFixed(2);
     setPotenciaHidraulica(Number(maxFixed));
-    //setPotenciaCv(functionService.potenciaCv(maxPH));
 
-    setNpsh(
+    /* setNpsh(
       functionService.npshDisponivel(
         alturaSuccao,
         perdaCargaSuccao,
         pressaoAgua
       )
-    );
+    ); */
 
     for (let i = 0; i < rangeVazao.length; i++) {
       const tick = rangeVazao[i];
       const tickEfi = calcEfi[i];
       const tickVazao = calcPH[i];
       const tickAltura = calcAlt[i];
+      const tickNpshr = calcNpshr[i];
 
       dataChart.push({
         key: tick,
         eficiencia: tickEfi,
         potencia_hidro: tickVazao,
         altura_mano: tickAltura,
+        npshr: tickNpshr,
       });
     }
 
@@ -104,6 +104,7 @@ function App() {
     setPump(selectedPump);
 
     setVazaoMax(selectedPump!.vazao_max_ls);
+    setAlturaMaxima(selectedPump!.altura_max);
   };
 
   const chartConfig = {
@@ -118,6 +119,10 @@ function App() {
     altura_mano: {
       label: "Altura manométrica (m) ",
       color: "#4f772d",
+    },
+    npshr: {
+      label: "NPSH requerido ",
+      color: "#B6F500",
     },
   } satisfies ChartConfig;
 
@@ -166,6 +171,13 @@ function App() {
                 strokeWidth={2}
                 dot={false}
               />
+              <Line
+                dataKey="npshr"
+                type="monotone"
+                stroke="#B6F500"
+                strokeWidth={2}
+                dot={false}
+              />
             </LineChart>
           </ChartContainer>
         </div>
@@ -203,6 +215,7 @@ function App() {
               type="number"
               placeholder="00.00"
               onChange={(e) => setAlturaMaxima(e.target.valueAsNumber)}
+              value={alturaMaxima}
             />
           </div>
           <div className="grid w-full max-w-sm items-center gap-1">
@@ -212,6 +225,7 @@ function App() {
               type="number"
               placeholder="00.00"
               onChange={(e) => setCoeficientePerda(e.target.valueAsNumber)}
+              value={coeficientePerda}
             />
           </div>
           <div className="grid w-full max-w-sm items-center gap-1">
@@ -221,6 +235,7 @@ function App() {
               type="number"
               placeholder="00.00"
               onChange={(e) => setEficienciaMax(e.target.valueAsNumber)}
+              value={eficienciaMax}
             />
           </div>
           <div className="grid w-full max-w-sm items-center gap-1">
@@ -230,6 +245,7 @@ function App() {
               type="number"
               placeholder="00.00"
               onChange={(e) => setVazaoOtima(e.target.valueAsNumber)}
+              value={vazaoOtima}
             />
           </div>
           <div className="grid w-full max-w-sm items-center gap-1">
@@ -239,6 +255,7 @@ function App() {
               type="number"
               placeholder="00.00"
               onChange={(e) => setAlturaSuccao(e.target.valueAsNumber)}
+              value={alturaSuccao}
             />
           </div>
           <div className="grid w-full max-w-sm items-center gap-1">
@@ -248,6 +265,7 @@ function App() {
               type="number"
               placeholder="00.00"
               onChange={(e) => setPerdaCargaSuccao(e.target.valueAsNumber)}
+              value={perdaCargaSuccao}
             />
           </div>
           <div className="grid w-full max-w-sm items-center gap-1">
@@ -257,6 +275,7 @@ function App() {
               type="number"
               placeholder="00.00"
               onChange={(e) => setPressaoAgua(e.target.valueAsNumber)}
+              value={pressaoAgua}
             />
           </div>
           <Button className="w-full max-w-sm" onClick={() => getLinesChart()}>
@@ -264,8 +283,17 @@ function App() {
           </Button>
         </div>
       </div>
-      <div className="flex flex-col self-start items-center gap-6 bg-emerald-200 mt-4 p-4 rounded-md">
-        <div className="flex self-start items-center gap-6">
+      <div
+        className={
+          "w-full flex flex-col self-start items-center gap-6 mt-4 p-4 rounded-md " +
+          (pump != undefined
+            ? pump?.npsha > pump?.npshr
+              ? "bg-emerald-200"
+              : "bg-red-200"
+            : "border-2 border-gray-200 rounded-lg")
+        }
+      >
+        <div className="flex justify-center items-center gap-6">
           <div className="flex flex-col justify-center items-start">
             <h1>Potência Hidráulica</h1>
             <span className="text-2xl font-bold">{potenciaHidraulica} kW</span>
@@ -276,22 +304,38 @@ function App() {
               {pump?.potencia_kwatts || 0} kW
             </span>
           </div>
-          <div className="flex flex-col justify-center items-start">
+          <div className="flex flex-col justify-center items-start mr-8">
             <h1>Potência da Bomba (CV)</h1>
             <span className="text-2xl font-bold">
               {pump?.potencia_cv || 0} CV
             </span>
           </div>
-          <div className="flex flex-col justify-center items-start">
+          <div className="flex flex-col justify-center items-start mr-8">
             <span>
-              NPSH Disponível (NPSHa): <b>{npsh} m</b>
+              NPSH Disponível (NPSHa): <b>{pump?.npsha || 0} m</b>
             </span>
             <span>
-              NPSH Requerido mínimo (NPSHr): <b>2.00 m</b>
+              NPSH Requerido mínimo (NPSHr): <b>{pump?.npshr || 0} m</b>
             </span>
           </div>
+          {pump != undefined ? (
+            pump?.npsha > pump?.npshr ? (
+              <div className="flex flex-col justify-center items-start">
+                <span className="self-start font-bold">
+                  ✅ Bomba operando na região segura
+                </span>
+              </div>
+            ) : (
+              <div className="flex flex-col justify-center items-start">
+                <span className="self-start font-bold">
+                  ❌ Bomba operando na região insegura
+                </span>
+              </div>
+            )
+          ) : (
+            <></>
+          )}
         </div>
-        {/* TODO: this shit */}
         {/* <span className="self-start font-bold">
           ✅ Bomba operando na região segura
         </span> */}

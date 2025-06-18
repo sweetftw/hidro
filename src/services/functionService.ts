@@ -109,11 +109,19 @@ export function npshDisponivel(
  * Estima o NPSHr (requerido) como uma função crescente da vazão.
  */
 export function npshRequerido(
-  Q: number,
+  Q: number[],
   NPSHrMin: number = 2.87,
   coef: number = 0.015
-): number {
-  return NPSHrMin + coef * Q;
+): number[] {
+  //return NPSHrMin + coef * Q;
+
+  if (Array.isArray(Q)) {
+    return Q.map((q) => {
+      return NPSHrMin + coef * q;
+    });
+  } else {
+    return [];
+  }
 }
 
 // Utility functions for array operations (replacing numpy functionality)
@@ -165,9 +173,14 @@ const potenciasBomba = potenciasHid.map((p, i) => potenciaBomba(p, eficiencias[i
 const potenciasCV = potenciasBomba.map(p => potenciaCv(p));
 */
 
-export function generateNumberRange(start: number, end: number) {
-  if (start > end) {
-    return [...Array(start - end - 1).keys()].map((n) => start - n);
+export function generateNumberRange(
+  start: number,
+  end: number,
+  step: number
+): number[] {
+  const range: number[] = [];
+  for (let i = start; i <= end; i += step) {
+    range.push(parseFloat(i.toFixed(2))); // Garantir precisão com 1 casa decimal
   }
-  return [...Array(end - start + 1).keys()].map((n) => n + start);
+  return range;
 }
