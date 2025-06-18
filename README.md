@@ -1,54 +1,78 @@
-# React + TypeScript + Vite
+# 💧 Simulador de Bombas Hidráulicas
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Este projeto foi desenvolvido por mim como parte da disciplina de Engenharia, ministrada pelo professor **Wilson Alano**, no curso de Engenharia da Computação da **Universidade do Sul de Santa Catarina (Unisul)**.
 
-Currently, two official plugins are available:
+A proposta é criar um **simulador interativo de bombas centrífugas** que permita visualizar e analisar os principais parâmetros operacionais, como:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Altura manométrica
+- Eficiência da bomba
+- Potência hidráulica e potência no eixo
+- Cavitação: NPSHa (disponível) e NPSHr (requerido)
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 📚 Objetivos do Projeto
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+A ideia do projeto é reforçar o entendimento dos conceitos hidráulicos de forma prática e visual. Com ele, foi possível:
+
+- Compreender melhor como a vazão influencia diretamente nos parâmetros da bomba.
+- Aplicar fórmulas técnicas em um ambiente digital e interativo.
+- Integrar conhecimentos de engenharia com programação e visualização de dados.
+
+---
+
+## ⚙️ Funcionalidades
+
+- Geração da **curva de Altura Manométrica** em função da vazão.
+- Exibição da **curva de Eficiência**, baseada na vazão ótima da bomba.
+- Cálculo da **Potência Hidráulica** e da **Potência no Eixo**, com conversão para CV.
+- Exibição **NPSHa e NPSHr**, destacando a zona segura de operação.
+
+---
+
+## 🧠 Fórmulas Aplicadas
+
+- `H(Q) = H0 - k * Q²` – Altura Manométrica
+- `η(Q) = ηmax * exp(-((Q - Qopt)/(largura * Qopt))²)` – Eficiência
+- `Ph = ρ * g * Q * H` – Potência Hidráulica
+- `NPSHa = Patm - Pv + hs - hfs` – NPSHa (disponível)
+- `NPSHr(Q) = a * Q² + b * Q + c` – NPSHr (modelo genérico da bomba)
+
+---
+
+## 🧰 Tecnologias Utilizadas
+
+- **TypeScript**
+- **Vite**
+- **ReCharts**
+
+---
+
+## 🏫 Instituição
+
+**Universidade do Sul de Santa Catarina – Unisul**  
+Curso de Engenharia da Computação  
+Professor orientador: **Wilson Alano**
+
+---
+
+## 🚀 Como Executar o Projeto
+
+1. Clone o repositório:
+
+```bash
+git clone https://github.com/sweetftw/hidro.git
+cd hidro
+```
+2. Instale as dependências:
+
+```bash
+npm install
+```
+3. Rode o app localmente
+```bash
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+## ✍️ Considerações Finais
+Esse projeto me ajudou bastante a consolidar os conceitos de hidráulica e também a melhorar minhas habilidades em desenvolvimento de interfaces interativas. Além disso, foi uma ótima oportunidade de integrar teoria e prática de forma visual e funcional
