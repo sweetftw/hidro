@@ -100,7 +100,7 @@ export function npshDisponivel(
   hs: number,
   hfs: number,
   Pv: number,
-  Patm: number
+  Patm: number = 1
 ): number {
   return Patm - Pv + hs - hfs;
 }

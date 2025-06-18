@@ -15,28 +15,36 @@ import "./App.css";
 import { Input } from "./components/ui/input";
 import { Label } from "./components/ui/label";
 import * as functionService from "./services/functionService";
+import { type Pump, pumpList } from "./services/pumpService";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "./components/ui/select";
 
 function App() {
   //const [count, setCount] = useState(0)
 
   //CONFIG BOMBA PARAMS
-
-  const [vazao, setVazao] = useState(0.0);
+  const [pump, setPump] = useState<Pump>();
+  const [vazaoMax, setVazaoMax] = useState(0.0);
   const [alturaMaxima, setAlturaMaxima] = useState(0.0);
   const [coeficientePerda, setCoeficientePerda] = useState(0.0);
   const [eficienciaMax, setEficienciaMax] = useState(0.0);
-  const [curvaEficiencia, setCurvaEficiencia] = useState(0.0);
   const [vazaoOtima, setVazaoOtima] = useState(0.0);
   const [alturaSuccao, setAlturaSuccao] = useState(0.0);
   const [perdaCargaSuccao, setPerdaCargaSuccao] = useState(0.0);
   const [pressaoAgua, setPressaoAgua] = useState(0.0);
-  const [pressaoAtm, setPressaoAtm] = useState(0.0);
 
   const [npsh, setNpsh] = useState(0.0);
   const [potenciaHidraulica, setPotenciaHidraulica] = useState(0.0);
   //const [potenciaCv, setPotenciaCv] = useState(0.0);
 
-  const rangeVazao = functionService.generateNumberRange(0, vazao);
+  const rangeVazao = functionService.generateNumberRange(0, vazaoMax);
 
   // CONFIG CHART
   const [chartData, setChartData] = useState<any[]>([]);
@@ -53,8 +61,7 @@ function App() {
     const calcEfi: number[] = functionService.eficiencia(
       rangeVazao,
       eficienciaMax,
-      vazaoOtima,
-      curvaEficiencia
+      vazaoOtima
     );
 
     const calcPH: number[] = functionService.potenciaHidraulica(
@@ -71,8 +78,7 @@ function App() {
       functionService.npshDisponivel(
         alturaSuccao,
         perdaCargaSuccao,
-        pressaoAgua,
-        pressaoAtm
+        pressaoAgua
       )
     );
 
@@ -91,6 +97,13 @@ function App() {
     }
 
     setChartData(dataChart);
+  };
+
+  const onValuePumpChange = (value: string) => {
+    const selectedPump = pumpList.get(value);
+    setPump(selectedPump);
+
+    setVazaoMax(selectedPump!.vazao_max_ls);
   };
 
   const chartConfig = {
@@ -159,12 +172,28 @@ function App() {
         <div className="w-full h-full flex flex-col justify-start items-center gap-4">
           {/* <h2>Parâmetros Bomba Hidráulica</h2> */}
           <div className="grid w-full max-w-sm min-w-3xs items-center gap-1">
-            <Label htmlFor="vazao">Vazão (Q) [L/s]</Label>
+            <Label htmlFor="pump">Selecione um Bomba Hidráulica</Label>
+            <Select onValueChange={(value) => onValuePumpChange(value)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="" />
+              </SelectTrigger>
+              <SelectContent id="pump">
+                <SelectGroup>
+                  {Array.from(pumpList.keys()).map((e) => (
+                    <SelectItem value={e}>{e}</SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid w-full max-w-sm min-w-3xs items-center gap-1">
+            <Label htmlFor="vazao">Vazão Máxima (Q) [L/s]</Label>
             <Input
               id="vazao"
               type="number"
               placeholder="00.00"
-              onChange={(e) => setVazao(e.target.valueAsNumber)}
+              onChange={(e) => setVazaoMax(e.target.valueAsNumber)}
+              value={vazaoMax}
             />
           </div>
           <div className="grid w-full max-w-sm min-w-3xs items-center gap-1">
@@ -192,15 +221,6 @@ function App() {
               type="number"
               placeholder="00.00"
               onChange={(e) => setEficienciaMax(e.target.valueAsNumber)}
-            />
-          </div>
-          <div className="grid w-full max-w-sm items-center gap-1">
-            <Label htmlFor="curv_efi">Largura da Curva de Eficiência</Label>
-            <Input
-              id="curv_efi"
-              type="number"
-              placeholder="00.00"
-              onChange={(e) => setCurvaEficiencia(e.target.valueAsNumber)}
             />
           </div>
           <div className="grid w-full max-w-sm items-center gap-1">
@@ -239,15 +259,6 @@ function App() {
               onChange={(e) => setPressaoAgua(e.target.valueAsNumber)}
             />
           </div>
-          <div className="grid w-full max-w-sm items-center gap-1">
-            <Label htmlFor="pres_atm">Pressão atmosférica (Patm) [m]</Label>
-            <Input
-              id="pres_atm"
-              type="number"
-              placeholder="00.00"
-              onChange={(e) => setPressaoAtm(e.target.valueAsNumber)}
-            />
-          </div>
           <Button className="w-full max-w-sm" onClick={() => getLinesChart()}>
             Calcular
           </Button>
@@ -261,11 +272,15 @@ function App() {
           </div>
           <div className="flex flex-col justify-center items-start">
             <h1>Potência da Bomba (kW)</h1>
-            <span className="text-2xl font-bold">49.44 kW</span>
+            <span className="text-2xl font-bold">
+              {pump?.potencia_kwatts || 0} kW
+            </span>
           </div>
           <div className="flex flex-col justify-center items-start">
             <h1>Potência da Bomba (CV)</h1>
-            <span className="text-2xl font-bold">67.21 CV</span>
+            <span className="text-2xl font-bold">
+              {pump?.potencia_cv || 0} CV
+            </span>
           </div>
           <div className="flex flex-col justify-center items-start">
             <span>
